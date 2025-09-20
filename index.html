@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stopwatch Web App</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+      color: #fff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+
+    .container {
+      text-align: center;
+      background: rgba(0, 0, 0, 0.6);
+      padding: 30px;
+      border-radius: 12px;
+      width: 320px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+    }
+
+    h1 {
+      margin-bottom: 20px;
+      font-size: 2em;
+      color: #00d4ff;
+    }
+
+    #display {
+      font-size: 2em;
+      margin: 15px 0;
+      font-weight: bold;
+    }
+
+    .buttons {
+      margin: 20px 0;
+    }
+
+    button {
+      background: #00d4ff;
+      color: #000;
+      border: none;
+      padding: 10px 20px;
+      margin: 5px;
+      font-size: 1em;
+      cursor: pointer;
+      border-radius: 5px;
+      transition: background 0.3s;
+    }
+
+    button:hover {
+      background: #00aabb;
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+      margin-top: 10px;
+      max-height: 150px;
+      overflow-y: auto;
+    }
+
+    ul li {
+      background: rgba(255, 255, 255, 0.1);
+      margin: 5px 0;
+      padding: 8px;
+      border-radius: 5px;
+      text-align: left;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Stopwatch</h1>
+    <div id="display">00:00:00.000</div>
+
+    <div class="buttons">
+      <button id="startStopBtn">Start</button>
+      <button id="resetBtn">Reset</button>
+      <button id="lapBtn">Lap</button>
+    </div>
+
+    <h2>Lap Times</h2>
+    <ul id="laps"></ul>
+  </div>
+
+  <script>
+    let startTime = 0;
+    let elapsedTime = 0;
+    let timerInterval;
+    let isRunning = false;
+
+    const display = document.getElementById("display");
+    const startStopBtn = document.getElementById("startStopBtn");
+    const resetBtn = document.getElementById("resetBtn");
+    const lapBtn = document.getElementById("lapBtn");
+    const laps = document.getElementById("laps");
+
+    // Format time function
+    function formatTime(ms) {
+      let hours = Math.floor(ms / 3600000);
+      let minutes = Math.floor((ms % 3600000) / 60000);
+      let seconds = Math.floor((ms % 60000) / 1000);
+      let milliseconds = ms % 1000;
+
+      return (
+        String(hours).padStart(2, "0") + ":" +
+        String(minutes).padStart(2, "0") + ":" +
+        String(seconds).padStart(2, "0") + "." +
+        String(milliseconds).padStart(3, "0")
+      );
+    }
+
+    // Update display
+    function updateTime() {
+      elapsedTime = Date.now() - startTime;
+      display.textContent = formatTime(elapsedTime);
+      saveState();
+    }
+
+    // Save state in localStorage
+    function saveState() {
+      const state = {
+        startTime,
+        elapsedTime,
+        isRunning,
+        laps: Array.from(laps.children).map(li => li.textContent)
+      };
+      localStorage.setItem("stopwatchState", JSON.stringify(state));
+    }
+
+    // Load state from localStorage
+    function loadState() {
+      const saved = JSON.parse(localStorage.getItem("stopwatchState"));
+      if (!saved) return;
+
+      startTime = saved.startTime;
+      elapsedTime = saved.elapsedTime;
+      isRunning = saved.isRunning;
+
+      display.textContent = formatTime(elapsedTime);
+
+      // restore laps
+      laps.innerHTML = "";
+      saved.laps.forEach(lapText => {
+        const li = document.createElement("li");
+        li.textContent = lapText;
+        laps.appendChild(li);
+      });
+
+      // if stopwatch was running, continue
+      if (isRunning) {
+        startTime = Date.now() - elapsedTime;
+        timerInterval = setInterval(updateTime, 10);
+        startStopBtn.textContent = "Pause";
+      }
+    }
+
+    // Start / Stop toggle
+    startStopBtn.addEventListener("click", () => {
+      if (!isRunning) {
+        startTime = Date.now() - elapsedTime;
+        timerInterval = setInterval(updateTime, 10);
+        startStopBtn.textContent = "Pause";
+        isRunning = true;
+      } else {
+        clearInterval(timerInterval);
+        elapsedTime = Date.now() - startTime;
+        startStopBtn.textContent = "Start";
+        isRunning = false;
+      }
+      saveState();
+    });
+
+    // Reset stopwatch
+    resetBtn.addEventListener("click", () => {
+      clearInterval(timerInterval);
+      elapsedTime = 0;
+      display.textContent = "00:00:00.000";
+      startStopBtn.textContent = "Start";
+      isRunning = false;
+      laps.innerHTML = "";
+      saveState();
+    });
+
+    // Add lap
+    lapBtn.addEventListener("click", () => {
+      if (isRunning) {
+        const li = document.createElement("li");
+        li.textContent = `Lap ${laps.children.length + 1}: ${display.textContent}`;
+        laps.appendChild(li);
+        saveState();
+      }
+    });
+
+    // Load saved state on page load
+    loadState();
+  </script>
+</body>
+</html>
