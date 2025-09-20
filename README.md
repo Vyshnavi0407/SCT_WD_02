@@ -27,19 +27,3 @@ The application allows users to:
 
 ---
 
-## 📷 Screenshots  
-👉 *Add screenshots here of your stopwatch running, laps recorded, and persistence after refresh.*  
-
----
-
-## ⚡ How to Run Locally  
-1. Clone this repo or download the `stopwatch.html` file.  
-2. Open the file in any browser (`Chrome`, `Edge`, `Firefox`).  
-3. Use the buttons to **Start**, **Pause**, **Reset**, or **Lap**.  
-
-```bash
-# Clone repository
-git clone https://github.com/your-username/stopwatch-app.git
-
-# Open in browser
-open stopwatch.html
